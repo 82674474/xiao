@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>小时工工时记录 · 智能薪资助手</title>
+    <style>
+        :root {
+            --primary: #4A6CF7;
+            --primary-light: #EEF1FE;
+            --primary-dark: #3651d5;
+            --success: #10B981;
+            --success-light: #ECFDF5;
+            --success-bg: #D1FAE5;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --danger-light: #FEF2F2;
+            --bg: #F8FAFC;
+            --card-bg: #FFFFFF;
+            --text: #1E293B;
+            --text-secondary: #64748B;
+            --text-muted: #94A3B8;
+            --border: #E2E8F0;
+            --border-light: #F1F5F9;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            --radius-sm: 8px;
+            --radius: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 20px;
+            --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            --font-mono: 'SF Mono', 'Cascadia Code', 'Consolas', 'Monaco', monospace;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #f0f4ff 0%, #f8fafc 30%, #f0f9ff 60%, #f5f3ff 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: var(--text);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .app-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 16px 20px 40px;
+        }
+
+        .app-header {
+            background: var(--card-bg);
+            border-radius: var(--radius-xl);
+            padding: 20px 28px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .app-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.4rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            white-space: nowrap;
+        }
+        .app-logo .icon {
+            width: 42px;
+            height: 42px;
+            border-radius: var(--radius);
+            background: linear-gradient(135deg, #4A6CF7, #6D8AFF);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        /* 头部操作区域：时薪与今天按钮各占50% */
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+        .header-actions .rate-setting,
+        .header-actions .btn-today {
+            flex: 1 1 0;
+            min-width: 0;
+        }
+        .header-actions .btn-today {
+            justify-content: center;
+        }
+
+        .rate-setting {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg);
+            border-radius: 30px;
+            padding: 6px 6px 6px 16px;
+            border: 1px solid var(--border);
+            transition: var(--transition);
+        }
+        .rate-setting:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(74, 108, 247, 0.1);
+        }
+        .rate-setting label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+        .rate-setting .rate-input-wrap {
+            display: flex;
+            align-items: center;
+            background: #fff;
+            border-radius: 24px;
+            padding: 0 4px 0 12px;
+            border: 1px solid transparent;
+        }
+        .rate-setting .currency {
+            font-weight: 700;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        .rate-setting input {
+            width: 65px;
+            border: none;
+            outline: none;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text);
+            padding: 7px 4px;
+            background: transparent;
+            text-align: center;
+            font-family: var(--font-mono);
+        }
+        .rate-setting .per-hour {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            padding-right: 8px;
+            white-space: nowrap;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 9px 18px;
+            border-radius: 30px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: var(--transition);
+            white-space: nowrap;
+            letter-spacing: 0.01em;
+        }
+        .btn:active {
+            transform: scale(0.96);
+        }
+        .btn-today {
+            background: #fff;
+            color: var(--primary);
+            border: 2px solid var(--primary-light);
+        }
+        .btn-today:hover {
+            background: var(--primary-light);
+            border-color: var(--primary);
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(74, 108, 247, 0.3);
+        }
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            box-shadow: 0 4px 16px rgba(74, 108, 247, 0.4);
+            transform: translateY(-1px);
+        }
+        .btn-sm {
+            padding: 5px 12px;
+            font-size: 0.78rem;
+            border-radius: 20px;
+            gap: 3px;
+        }
+        .btn-xs {
+            padding: 3px 9px;
+            font-size: 0.7rem;
+            border-radius: 16px;
+            gap: 2px;
+        }
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid transparent;
+        }
+        .btn-ghost:hover {
+            background: var(--bg);
+            border-color: var(--border);
+            color: var(--text);
+        }
+        .btn-edit {
+            background: #fff;
+            color: var(--primary);
+            border: 1px solid var(--border);
+        }
+        .btn-edit:hover {
+            background: var(--primary-light);
+            border-color: var(--primary);
+        }
+        .btn-danger {
+            background: #fff;
+            color: var(--danger);
+            border: 1px solid #FECACA;
+        }
+        .btn-danger:hover {
+            background: var(--danger-light);
+            border-color: var(--danger);
+        }
+
+        .btn-block {
+            display: flex;
+            width: 100%;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 14px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .stat-card {
+            flex: 1;
+            min-width: 140px;
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            padding: 16px 20px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: var(--transition);
+        }
+        .stat-card:hover {
+            box-shadow: var(--shadow);
+            transform: translateY(-1px);
+        }
+        .stat-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            flex-shrink: 0;
+        }
+        .stat-icon.blue { background: #EFF6FF; color: #3B82F6; }
+        .stat-icon.green { background: #ECFDF5; color: #10B981; }
+        .stat-icon.amber { background: #FFFBEB; color: #F59E0B; }
+        .stat-icon.purple { background: #F5F3FF; color: #8B5CF6; }
+        .stat-info .stat-value {
+            font-size: 1.35rem;
+            font-weight: 700;
+            font-family: var(--font-mono);
+        }
+        .stat-info .stat-label {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .calendar-card {
+            background: var(--card-bg);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-light);
+            overflow: hidden;
+        }
+        .calendar-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--border-light);
+            background: #FAFBFC;
+        }
+        .calendar-nav .month-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+        .nav-btns { display: flex; gap: 6px; }
+        .nav-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            background: #fff;
+            cursor: pointer;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+            color: var(--text-secondary);
+        }
+        .nav-btn:hover {
+            background: var(--primary-light);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+            padding: 8px 12px 14px;
+            background: #FAFBFC;
+        }
+        .calendar-day-header {
+            text-align: center;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            padding: 10px 4px 8px;
+            text-transform: uppercase;
+        }
+        .calendar-cell {
+            position: relative;
+            min-height: 90px;
+            padding: 8px 7px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.18s ease;
+            background: #fff;
+            border: 2px solid transparent;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        .calendar-cell:hover {
+            background: #F8FAFF;
+            border-color: #D0D9FF;
+            box-shadow: 0 2px 8px rgba(74,108,247,0.08);
+            transform: translateY(-1px);
+            z-index: 2;
+        }
+        .calendar-cell:active { transform: scale(0.97); }
+        .calendar-cell.other-month { background: #F9FAFB; opacity: 0.55; }
+        .calendar-cell.other-month:hover { opacity: 0.8; background: #F3F4F6; border-color: #E5E7EB; }
+        .calendar-cell.today { border-color: var(--primary) !important; background: #F8FAFF; box-shadow: 0 0 0 4px rgba(74,108,247,0.06); }
+        .calendar-cell.has-records { border-color: #A7F3D0; }
+        .calendar-cell.has-records-many { border-color: #6EE7B7; background: #FAFFFC; }
+        .calendar-cell.has-records-full { border-color: #34D399; background: #F5FFFA; }
+        .cell-date { font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; justify-content: space-between; }
+        .cell-date .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
+        .cell-date .dot.many { background: #F59E0B; }
+        .cell-date .dot.full { background: #EF4444; }
+        .cell-hours { font-size: 0.78rem; font-weight: 700; color: var(--success); font-family: var(--font-mono); }
+        .cell-hours.medium { color: #F59E0B; }
+        .cell-hours.high { color: #EF4444; }
+        .cell-income { font-size: 0.7rem; color: var(--text-muted); font-weight: 500; font-family: var(--font-mono); }
+
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(15,23,42,0.5); z-index: 100;
+            display: flex; align-items: center; justify-content: center; padding: 20px;
+            animation: fadeIn 0.2s ease; backdrop-filter: blur(2px);
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .modal {
+            background: #fff; border-radius: var(--radius-xl); box-shadow: var(--shadow-xl);
+            width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto;
+            animation: slideUp 0.25s cubic-bezier(0.22,0.61,0.36,1);
+        }
+        .modal-header {
+            padding: 20px 24px 16px; border-bottom: 1px solid var(--border-light);
+            display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; background: #fff; z-index: 5;
+            border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+        }
+        .modal-header h3 { font-size: 1.15rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .modal-header .date-badge { background: var(--primary-light); color: var(--primary); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; }
+        .modal-close {
+            width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--border);
+            background: #fff; cursor: pointer; font-size: 1.1rem; display: flex;
+            align-items: center; justify-content: center; transition: var(--transition); color: var(--text-secondary);
+        }
+        .modal-close:hover { background: #FEE2E2; border-color: #FECACA; color: var(--danger); }
+        .modal-body { padding: 20px 24px; }
+        .record-list { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; max-height: 200px; overflow-y: auto; padding-right: 4px; }
+        .record-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: var(--bg); border-radius: var(--radius); transition: var(--transition); border: 1px solid transparent; flex-wrap: wrap; }
+        .record-item:hover { border-color: var(--border); box-shadow: var(--shadow-sm); }
+        .record-info { flex: 1; min-width: 80px; }
+        .record-hours-text { font-weight: 700; color: var(--primary); font-family: var(--font-mono); font-size: 0.95rem; }
+        .empty-records { text-align: center; padding: 20px; color: var(--text-muted); font-size: 0.9rem; }
+        .empty-icon { font-size: 2rem; display: block; margin-bottom: 8px; opacity: 0.6; }
+        .divider { border: none; border-top: 1px solid var(--border-light); margin: 16px 0; }
+
+        .hour-selector-label {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .hour-live-preview {
+            font-size: 0.8rem;
+            color: var(--primary);
+            font-weight: 600;
+            background: var(--primary-light);
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+        .hours-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+            max-height: 260px;
+            overflow-y: auto;
+            padding: 4px 2px;
+            margin-bottom: 12px;
+            user-select: none;
+        }
+        .hour-btn {
+            padding: 6px 10px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            background: #fff;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-align: center;
+            transition: var(--transition);
+            color: var(--text);
+            font-family: var(--font-mono);
+        }
+        .hour-btn:hover {
+            background: var(--primary-light);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+        .hour-btn.active {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+            box-shadow: 0 2px 6px rgba(74,108,247,0.4);
+        }
+        /* 休息按钮特殊样式 */
+        .hour-btn.rest-btn {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
+            background: #FEF3C7;
+            border-color: #FCD34D;
+            color: #92400E;
+            font-weight: 700;
+        }
+        .hour-btn.rest-btn.active {
+            background: #F59E0B;
+            color: #fff;
+            border-color: #D97706;
+            box-shadow: 0 2px 6px rgba(245,158,11,0.5);
+        }
+
+        .day-summary { display: flex; gap: 16px; padding: 12px 16px; background: #F0F9FF; border-radius: var(--radius); margin-top: 16px; flex-wrap: wrap; border: 1px solid #BAE6FD; }
+        .day-summary-item { display: flex; flex-direction: column; gap: 2px; }
+        .day-summary-item .sum-label { font-size: 0.7rem; color: var(--text-muted); font-weight: 500; }
+        .day-summary-item .sum-value { font-weight: 700; color: var(--text); font-family: var(--font-mono); font-size: 1rem; }
+
+        .legend { display: flex; gap: 16px; padding: 12px 20px; flex-wrap: wrap; font-size: 0.75rem; color: var(--text-muted); align-items: center; justify-content: center; }
+        .legend-item { display: flex; align-items: center; gap: 5px; }
+        .legend-dot { width: 10px; height: 10px; border-radius: 3px; }
+        .legend-dot.light { background: #A7F3D0; border: 1px solid #6EE7B7; }
+        .legend-dot.medium { background: #FCD34D; border: 1px solid #F59E0B; }
+        .legend-dot.high { background: #FCA5A5; border: 1px solid #EF4444; }
+
+        .toast {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
+            background: #1E293B; color: #fff; padding: 12px 24px; border-radius: 30px;
+            font-weight: 600; font-size: 0.85rem; z-index: 200; pointer-events: none;
+            transition: transform 0.35s cubic-bezier(0.22,0.61,0.36,1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        .toast.success { background: #059669; }
+        .toast.error { background: #DC2626; }
+
+        @media (max-width: 768px) {
+            .app-container { padding: 8px 10px 30px; }
+            .app-header { padding: 14px 16px; border-radius: var(--radius-lg); }
+            .rate-setting { padding: 4px 4px 4px 10px; gap: 4px; }
+            .rate-setting input { width: 48px; font-size: 0.8rem; padding: 5px 2px; }
+            .calendar-grid { gap: 1px; padding: 4px 4px 8px; }
+            .calendar-cell { min-height: 60px; padding: 5px 4px; }
+            .modal { max-width: 95vw; border-radius: var(--radius-lg); }
+            .modal-body { padding: 14px 16px; }
+            .hours-grid { max-height: 220px; }
+            .hour-btn { padding: 5px 8px; font-size: 0.72rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="app-logo">
+                <span class="icon">⏱️</span>
+                <span>工时记录</span>
+            </div>
+            <div class="header-actions">
+                <div class="rate-setting">
+                    <label for="defaultRate">时薪</label>
+                    <div class="rate-input-wrap">
+                        <span class="currency">¥</span>
+                        <input type="number" id="defaultRate" value="16" min="1" step="1">
+                        <span class="per-hour">/小时</span>
+                    </div>
+                </div>
+                <button class="btn btn-today" onclick="goToToday()">📅 今天</button>
+            </div>
+        </header>
+
+        <div class="stats-bar">
+            <div class="stat-card">
+                <div class="stat-icon blue">📊</div>
+                <div class="stat-info">
+                    <div class="stat-value" id="statTotalHours">0h</div>
+                    <div class="stat-label">本月总工时</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon green">💰</div>
+                <div class="stat-info">
+                    <div class="stat-value" id="statTotalIncome">¥0</div>
+                    <div class="stat-label">本月总收入</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon amber">📅</div>
+                <div class="stat-info">
+                    <div class="stat-value" id="statWorkDays">0天</div>
+                    <div class="stat-label">工作天数</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon purple">🛌</div>
+                <div class="stat-info">
+                    <div class="stat-value" id="statTotalRecords">0天</div>
+                    <div class="stat-label">休息天数</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="calendar-card">
+            <div class="calendar-nav">
+                <button class="nav-btn" onclick="prevMonth()">◀</button>
+                <span class="month-title" id="monthTitle">2026年 5月</span>
+                <button class="nav-btn" onclick="nextMonth()">▶</button>
+            </div>
+            <div class="calendar-grid" id="calendarGrid"></div>
+            <div class="legend">
+                <span class="legend-item"><span class="legend-dot light"></span> 1-3小时</span>
+                <span class="legend-item"><span class="legend-dot medium"></span> 4-6小时</span>
+                <span class="legend-item"><span class="legend-dot high"></span> 7小时+</span>
+                <span style="margin-left:8px;color:#94A3B8;">点击日期记录工时</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalOverlay" style="display:none;" onclick="closeModalOutside(event)">
+        <div class="modal" id="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3>⏱️ 工时记录 <span class="date-badge" id="modalDateBadge">2026-05-03</span></h3>
+                <button class="modal-close" onclick="closeModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="hour-selector-label">
+                        <span id="formTitle">➕ 添加工时</span>
+                        <span class="hour-live-preview" id="livePreview">1h → ¥16</span>
+                    </div>
+                    <div class="hours-grid" id="hoursSelector"></div>
+                    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                        <button class="btn btn-primary btn-block" id="btnSaveRecord" onclick="saveRecord()">💾 保存</button>
+                        <button class="btn btn-ghost btn-sm" id="btnCancelEdit" style="display:none;" onclick="cancelEdit()">取消编辑</button>
+                    </div>
+                    <input type="hidden" id="editingRecordId" value="">
+                </div>
+                <div class="day-summary" id="daySummary">
+                    <div class="day-summary-item">
+                        <span class="sum-label">当日总工时</span>
+                        <span class="sum-value" id="sumHours">0h</span>
+                    </div>
+                    <div class="day-summary-item">
+                        <span class="sum-label">预计收入</span>
+                        <span class="sum-value" id="sumIncome">¥0</span>
+                    </div>
+                    <div class="day-summary-item">
+                        <span class="sum-label">记录条数</span>
+                        <span class="sum-value" id="sumCount">0条</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        (function() {
+            const STORAGE_KEY = 'hourly_work_records_v3';
+            const RATE_KEY = 'default_hourly_rate';
+
+            let currentYear, currentMonth;
+            let selectedDate = null;
+            let editingRecordId = null;
+            let selectedHour = 1; // 默认选中的小时数，0 表示休息
+            let recordsData = {};
+
+            const today = new Date();
+            const todayStr = formatDateStr(today.getFullYear(), today.getMonth(), today.getDate());
+            currentYear = today.getFullYear();
+            currentMonth = today.getMonth();
+
+            const $calendarGrid = document.getElementById('calendarGrid');
+            const $monthTitle = document.getElementById('monthTitle');
+            const $modalOverlay = document.getElementById('modalOverlay');
+            const $modalDateBadge = document.getElementById('modalDateBadge');
+            const $formTitle = document.getElementById('formTitle');
+            const $hoursSelector = document.getElementById('hoursSelector');
+            const $editingRecordId = document.getElementById('editingRecordId');
+            const $btnSaveRecord = document.getElementById('btnSaveRecord');
+            const $btnCancelEdit = document.getElementById('btnCancelEdit');
+            const $defaultRate = document.getElementById('defaultRate');
+            const $sumHours = document.getElementById('sumHours');
+            const $sumIncome = document.getElementById('sumIncome');
+            const $sumCount = document.getElementById('sumCount');
+            const $livePreview = document.getElementById('livePreview');
+            const $toast = document.getElementById('toast');
+            const $statTotalHours = document.getElementById('statTotalHours');
+            const $statTotalIncome = document.getElementById('statTotalIncome');
+            const $statWorkDays = document.getElementById('statWorkDays');
+            const $statTotalRecords = document.getElementById('statTotalRecords');
+
+            function loadData() {
+                try {
+                    const raw = localStorage.getItem(STORAGE_KEY);
+                    recordsData = raw ? JSON.parse(raw) : {};
+                    if (typeof recordsData !== 'object' || recordsData === null || Array.isArray(recordsData)) {
+                        recordsData = {};
+                    }
+                } catch (e) { recordsData = {}; }
+            }
+
+            function saveData() {
+                try {
+                    const cleaned = {};
+                    for (const [dateKey, records] of Object.entries(recordsData)) {
+                        if (Array.isArray(records) && records.length > 0) {
+                            cleaned[dateKey] = records;
+                        }
+                    }
+                    recordsData = cleaned;
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(recordsData));
+                } catch (e) { showToast('保存失败，请检查存储空间', 'error'); }
+            }
+
+            // 关键修改：默认时薪改为16，且本地存储无值时保存16，但保持用户已自定义的值优先
+            function loadDefaultRate() {
+                try {
+                    const stored = localStorage.getItem(RATE_KEY);
+                    if (stored !== null) {
+                        const rate = parseInt(stored, 10);
+                        if (!isNaN(rate) && rate >= 1) {
+                            return rate;
+                        }
+                    }
+                    // 无存储或存储无效，返回16并固化存储，避免每次默认为16但存储仍为空导致未知情况
+                    localStorage.setItem(RATE_KEY, '16');
+                    return 16;
+                } catch (e) {
+                    return 16;
+                }
+            }
+
+            function saveDefaultRate(rate) {
+                try { 
+                    const validRate = Math.max(1, rate);
+                    localStorage.setItem(RATE_KEY, String(validRate)); 
+                } catch (e) {}
+            }
+
+            function formatDateStr(year, month, day) {
+                const m = String(month + 1).padStart(2, '0');
+                const d = String(day).padStart(2, '0');
+                return `${year}-${m}-${d}`;
+            }
+
+            function getDaysInMonth(year, month) {
+                return new Date(year, month + 1, 0).getDate();
+            }
+
+            function getFirstDayOfWeek(year, month) {
+                const jsDay = new Date(year, month, 1).getDay();
+                return jsDay === 0 ? 6 : jsDay - 1;
+            }
+
+            function getRecordsForDate(dateStr) {
+                return recordsData[dateStr] || [];
+            }
+
+            function getDayTotalHours(dateStr) {
+                return getRecordsForDate(dateStr).reduce((sum, r) => sum + (parseFloat(r.hours) || 0), 0);
+            }
+
+            function getDayTotalIncome(dateStr) {
+                return getDayTotalHours(dateStr) * loadDefaultRate();
+            }
+
+            function generateId() {
+                return 'rec_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
+            }
+
+            let toastTimer;
+            function showToast(msg, type = 'success') {
+                clearTimeout(toastTimer);
+                $toast.textContent = msg;
+                $toast.className = 'toast ' + type + ' show';
+                toastTimer = setTimeout(() => $toast.classList.remove('show'), 1800);
+            }
+
+            // 生成小时选择器（前23个为1~12小时步长0.5，第24个为"休息"）
+            function renderHoursSelector() {
+                const hours = [];
+                for (let h = 1; h <= 12; h += 0.5) {
+                    hours.push(h);
+                }
+                const restValue = -1;
+                let html = hours.map(h => {
+                    const display = Number.isInteger(h) ? h.toString() : h.toFixed(1);
+                    const isActive = selectedHour === 0 ? false : Math.abs(h - selectedHour) < 0.001;
+                    return `<button class="hour-btn${isActive ? ' active' : ''}" data-hour="${h}">${display}</button>`;
+                }).join('');
+
+                const isRestActive = (selectedHour === 0);
+                html += `<button class="hour-btn rest-btn${isRestActive ? ' active' : ''}" data-hour="${restValue}">休息</button>`;
+                $hoursSelector.innerHTML = html;
+                updateLivePreview();
+            }
+
+            function updateLivePreview() {
+                const rate = loadDefaultRate();
+                if (selectedHour === 0) {
+                    $livePreview.textContent = `休息 → ¥0`;
+                } else {
+                    const income = selectedHour * rate;
+                    $livePreview.textContent = `${selectedHour}h → ¥${income.toFixed(2)}`;
+                }
+            }
+
+            function setSelectedHour(hour) {
+                selectedHour = hour;
+                document.querySelectorAll('.hour-btn').forEach(btn => {
+                    const btnHour = parseFloat(btn.dataset.hour);
+                    if (btnHour === -1) {
+                        btn.classList.toggle('active', hour === 0);
+                    } else {
+                        btn.classList.toggle('active', Math.abs(btnHour - hour) < 0.001);
+                    }
+                });
+                updateLivePreview();
+            }
+
+            $hoursSelector.addEventListener('click', function(e) {
+                const btn = e.target.closest('.hour-btn');
+                if (!btn) return;
+                const hourVal = parseFloat(btn.dataset.hour);
+                if (hourVal === -1) {
+                    setSelectedHour(0);
+                } else {
+                    setSelectedHour(hourVal);
+                }
+            });
+
+            function openModal(dateStr) {
+                selectedDate = dateStr;
+                const existingRecords = getRecordsForDate(dateStr);
+                if (existingRecords.length > 0) {
+                    editingRecordId = existingRecords[0].id;
+                    $editingRecordId.value = editingRecordId;
+                    const recordHours = existingRecords[0].hours;
+                    selectedHour = recordHours === 0 ? 0 : recordHours;
+                    setSelectedHour(selectedHour);
+                    $formTitle.textContent = '✏️ 编辑工时';
+                    $btnSaveRecord.textContent = '💾 更新';
+                } else {
+                    editingRecordId = null;
+                    $editingRecordId.value = '';
+                    selectedHour = 1;
+                    setSelectedHour(1);
+                    $formTitle.textContent = '➕ 添加工时';
+                    $btnSaveRecord.textContent = '💾 保存';
+                }
+                $btnCancelEdit.style.display = 'none';
+                $modalDateBadge.textContent = dateStr;
+                $modalOverlay.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+                renderHoursSelector();
+                updateDaySummary();
+            }
+
+            function closeModal() {
+                $modalOverlay.style.display = 'none';
+                document.body.style.overflow = '';
+                selectedDate = null;
+                editingRecordId = null;
+                $editingRecordId.value = '';
+                selectedHour = 1;
+                $formTitle.textContent = '➕ 添加工时';
+                $btnSaveRecord.textContent = '💾 保存';
+                $btnCancelEdit.style.display = 'none';
+            }
+
+            function closeModalOutside(event) {
+                if (event.target === $modalOverlay) closeModal();
+            }
+
+            function saveRecord() {
+                if (!selectedDate) return;
+                const hours = selectedHour === 0 ? 0 : selectedHour;
+                if (hours < 0) {
+                    showToast('请选择有效的小时数或休息', 'error');
+                    return;
+                }
+                if (!recordsData[selectedDate]) recordsData[selectedDate] = [];
+                const editingId = $editingRecordId.value;
+                if (editingId) {
+                    const idx = recordsData[selectedDate].findIndex(r => r.id === editingId);
+                    if (idx !== -1) {
+                        recordsData[selectedDate] = [{ id: editingId, hours }];
+                    }
+                    showToast(hours === 0 ? '✅ 已标记为休息' : '✅ 工时已更新');
+                } else {
+                    if (recordsData[selectedDate].length > 0) {
+                        const id = recordsData[selectedDate][0].id;
+                        recordsData[selectedDate] = [{ id, hours }];
+                        showToast(hours === 0 ? '✅ 已标记为休息' : '✅ 工时已更新');
+                    } else {
+                        recordsData[selectedDate].push({ id: generateId(), hours });
+                        showToast(hours === 0 ? '✅ 已标记为休息' : '✅ 工时已添加');
+                    }
+                }
+                saveData();
+                cancelEdit();
+                updateDaySummary();
+                renderCalendar();
+                updateStats();
+            }
+
+            function cancelEdit() {
+                editingRecordId = null;
+                $editingRecordId.value = '';
+                selectedHour = 1;
+                setSelectedHour(1);
+                $formTitle.textContent = '➕ 添加工时';
+                $btnSaveRecord.textContent = '💾 保存';
+                $btnCancelEdit.style.display = 'none';
+                renderHoursSelector();
+            }
+
+            function updateDaySummary() {
+                if (!selectedDate) {
+                    $sumHours.textContent = '0h';
+                    $sumIncome.textContent = '¥0';
+                    $sumCount.textContent = '0条';
+                    return;
+                }
+                const records = getRecordsForDate(selectedDate);
+                const totalH = records.reduce((s, r) => s + (parseFloat(r.hours) || 0), 0);
+                const rate = loadDefaultRate();
+                const totalI = totalH * rate;
+                $sumHours.textContent = totalH.toFixed(2) + 'h';
+                $sumIncome.textContent = '¥' + totalI.toFixed(2);
+                $sumCount.textContent = records.length + '条';
+            }
+
+            function renderCalendar() {
+                const daysInMonth = getDaysInMonth(currentYear, currentMonth);
+                const firstDay = getFirstDayOfWeek(currentYear, currentMonth);
+                $monthTitle.innerHTML = `<span>${currentYear}年 ${currentMonth + 1}月</span>`;
+                const dayHeaders = ['一', '二', '三', '四', '五', '六', '日'];
+                let html = dayHeaders.map(d => `<div class="calendar-day-header">${d}</div>`).join('');
+                const totalCells = 42;
+                const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+                const prevYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+                const daysInPrevMonth = getDaysInMonth(prevYear, prevMonth);
+
+                for (let i = 0; i < totalCells; i++) {
+                    let dayNum, dateStr, isOtherMonth, isToday;
+                    if (i < firstDay) {
+                        dayNum = daysInPrevMonth - firstDay + i + 1;
+                        dateStr = formatDateStr(prevYear, prevMonth, dayNum);
+                        isOtherMonth = true;
+                        isToday = (dateStr === todayStr);
+                    } else if (i - firstDay >= daysInMonth) {
+                        dayNum = i - firstDay - daysInMonth + 1;
+                        const nextMonth = currentMonth === 11 ? 0 : currentMonth + 1;
+                        const nextYear = currentMonth === 11 ? currentYear + 1 : currentYear;
+                        dateStr = formatDateStr(nextYear, nextMonth, dayNum);
+                        isOtherMonth = true;
+                        isToday = (dateStr === todayStr);
+                    } else {
+                        dayNum = i - firstDay + 1;
+                        dateStr = formatDateStr(currentYear, currentMonth, dayNum);
+                        isOtherMonth = false;
+                        isToday = (dateStr === todayStr);
+                    }
+
+                    const records = getRecordsForDate(dateStr);
+                    const totalHours = getDayTotalHours(dateStr);
+                    const totalIncome = getDayTotalIncome(dateStr);
+                    const hasRecords = records.length > 0;
+                    const isRestDay = hasRecords && records[0].hours === 0;
+
+                    let cellClass = 'calendar-cell';
+                    if (isOtherMonth) cellClass += ' other-month';
+                    if (isToday) cellClass += ' today';
+                    if (hasRecords && !isOtherMonth && !isRestDay) {
+                        if (totalHours >= 7) cellClass += ' has-records-full';
+                        else if (totalHours >= 4) cellClass += ' has-records-many';
+                        else cellClass += ' has-records';
+                    }
+                    let hoursClass = 'cell-hours';
+                    if (totalHours >= 7) hoursClass += ' high';
+                    else if (totalHours >= 4) hoursClass += ' medium';
+
+                    let contentHTML = '';
+                    if (hasRecords) {
+                        if (isRestDay) {
+                            contentHTML = '<div class="cell-hours" style="color:#92400E;">休息</div>';
+                        } else {
+                            contentHTML = `<div class="${hoursClass}">${totalHours.toFixed(1)}h</div><div class="cell-income">¥${totalIncome.toFixed(0)}</div>`;
+                        }
+                    }
+
+                    html += `
+                        <div class="${cellClass}" onclick="openModal('${dateStr}')" title="${dateStr}${hasRecords ? (isRestDay ? ' | 休息' : ' | ' + totalHours.toFixed(2) + 'h | ¥' + totalIncome.toFixed(2)) : ''}">
+                            <div class="cell-date"><span>${dayNum}</span>${hasRecords && !isRestDay ? (totalHours >= 7 ? '<span class="dot full"></span>' : (totalHours >= 4 ? '<span class="dot many"></span>' : '<span class="dot"></span>')) : (isRestDay ? '<span style="font-size:0.7rem;color:#92400E;">🛌</span>' : '')}</div>
+                            ${contentHTML}
+                        </div>
+                    `;
+                }
+                $calendarGrid.innerHTML = html;
+            }
+
+            function updateStats() {
+                let totalHours = 0, workDays = 0, restDays = 0;
+                const daysInMonth = getDaysInMonth(currentYear, currentMonth);
+                for (let d = 1; d <= daysInMonth; d++) {
+                    const dateStr = formatDateStr(currentYear, currentMonth, d);
+                    const records = getRecordsForDate(dateStr);
+                    if (records.length > 0) {
+                        const hours = records[0].hours;
+                        if (hours === 0) {
+                            restDays++;
+                        } else {
+                            workDays++;
+                            totalHours += hours;
+                        }
+                    }
+                }
+                const rate = loadDefaultRate();
+                const totalIncome = totalHours * rate;
+                $statTotalHours.textContent = totalHours.toFixed(1) + 'h';
+                $statTotalIncome.textContent = '¥' + totalIncome.toFixed(2);
+                $statWorkDays.textContent = workDays + '天';
+                $statTotalRecords.textContent = restDays + '天';
+            }
+
+            function changeMonth(delta) {
+                currentMonth += delta;
+                if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+                else if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+                renderCalendar();
+                updateStats();
+            }
+
+            function prevMonth() { changeMonth(-1); }
+            function nextMonth() { changeMonth(1); }
+
+            function goToToday() {
+                const t = new Date();
+                currentYear = t.getFullYear();
+                currentMonth = t.getMonth();
+                renderCalendar();
+                updateStats();
+                document.querySelector('.calendar-card').scrollIntoView({ behavior: 'smooth' });
+                showToast('📅 已跳转到今天');
+            }
+
+            function handleDefaultRateChange() {
+                const rawValue = $defaultRate.value.trim();
+                let rate = parseInt(rawValue, 10);
+                if (isNaN(rate) || rate < 1) {
+                    const currentSaved = loadDefaultRate();
+                    $defaultRate.value = currentSaved;
+                    showToast(`请输入有效时薪（≥1元）`, 'error');
+                    return;
+                }
+                saveDefaultRate(rate);
+                updateLivePreview();
+                if ($modalOverlay.style.display === 'flex' && selectedDate) {
+                    updateDaySummary();
+                }
+                renderCalendar();
+                updateStats();
+                showToast(`时薪已更新为 ¥${rate}/小时`, 'success');
+            }
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && $modalOverlay.style.display === 'flex') {
+                    closeModal();
+                    return;
+                }
+                if (e.key === 'Enter' && $modalOverlay.style.display === 'flex' && document.activeElement && document.activeElement.closest('.modal-body')) {
+                    e.preventDefault();
+                    saveRecord();
+                }
+            });
+
+            $defaultRate.addEventListener('change', handleDefaultRateChange);
+            $defaultRate.addEventListener('input', function() {
+                clearTimeout(this._debounceTimer);
+                this._debounceTimer = setTimeout(handleDefaultRateChange, 700);
+            });
+
+            window.openModal = openModal;
+            window.closeModal = closeModal;
+            window.closeModalOutside = closeModalOutside;
+            window.saveRecord = saveRecord;
+            window.cancelEdit = cancelEdit;
+            window.prevMonth = prevMonth;
+            window.nextMonth = nextMonth;
+            window.goToToday = goToToday;
+
+            loadData();
+            const initialRate = loadDefaultRate();
+            $defaultRate.value = initialRate;
+            renderCalendar();
+            updateStats();
+        })();
+    </script>
+</body>
+</html>
